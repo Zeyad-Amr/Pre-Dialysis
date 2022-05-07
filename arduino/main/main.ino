@@ -1,5 +1,4 @@
 #include <math.h>
-
 // Define Thermistor pin
 #define thermistor_output A1
 
@@ -74,11 +73,11 @@ bool isOn = false;
 void loop()
 {
 
-  if (isOn)
+  if (!isOn)
   {
     /// CONTAINER LEVEL MEASUREMENT
     conatinerLevel = calcDistance();
-    while (conatinerLevel < 100)
+    while (conatinerLevel <= 100)
     {
       warinig("Dialysis Fluid Container isn't full, please add dialysis fluid");
 
@@ -131,7 +130,7 @@ void loop()
   /// CONTAINER LEVEL MEASUREMENT
   conatinerLevel = calcDistance();
 
-  while (conatinerLevel < 15)
+  while (conatinerLevel > 95)
   {
     warinig("Dialysis Fluid Container needs to be refilled");
 
@@ -149,7 +148,7 @@ void loop()
 
   /// BLOOD LEAKAGE TEST
   DialysisColor = ColorReadValue(false);
-  while (DialysisColor < 550 || DialysisColor > 700)
+  while (DialysisColor > 700)
   {
     warinig("There is a Blood Leakage, Check the dialysis fluid");
 
@@ -165,7 +164,7 @@ void loop()
   status("Good, Dialysis Fluid is now pure");
   /// DRAIN CONTAINER LEVEL MEASUREMENT
   drainLevel = drainLevelCalc();
-  while (drainLevel < 15)
+  while (drainLevel > 95)
   {
     warinig("Drain if full, please empty it");
 
