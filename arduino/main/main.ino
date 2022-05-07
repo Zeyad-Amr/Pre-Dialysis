@@ -34,8 +34,7 @@ int DialysisColor = 0;
 double temp = 0;
 
 float containerHeight = 11;
-float conatinerLevelpre = 0;
-float distance = 0;
+float conatinerLevel = 0;
 int drainLevel = 0;
 
 void setup()
@@ -54,6 +53,14 @@ void setup()
   pinMode(sensorOutPH, INPUT);
   pinMode(sensorOutBD, INPUT);
 
+  // Set Heater Relay as outputs
+  pinMode(heater, OUTPUT);
+  digitalWrite(heater, HIGH);
+
+  // Set Pump Relay as outputs
+  pinMode(pump, OUTPUT);
+  digitalWrite(pump, LOW);
+
   // Set ULTRASONIC SENSOR
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
@@ -66,36 +73,114 @@ bool isOn = false;
 
 void loop()
 {
+
+  if (isOn)
+  {
+    /// CONTAINER LEVEL MEASUREMENT
+    conatinerLevel = calcDistance();
+    while (conatinerLevel < 100)
+    {
+      warinig("Dialysis Fluid Container isn't full, please add dialysis fluid");
+
+      /// CONTAINER LEVEL MEASUREMENT
+      conatinerLevel = calcDistance();
+    }
+
+    status("Dialysis Fluid Container is full");
+    /// TEMP MEASUREMENT
+    temp = getTemp();
+    while (temp < 42)
+    {
+      warinig("Temp < 42, heater is working now");
+      digitalWrite(heater, LOW);
+
+      /// TEMP MEASUREMENT
+      temp = getTemp();
+    }
+    digitalWrite(heater, HIGH);
+
+    status("Temperature is ok");
+
+    /// PH MEASUREMENT
+    ph = ColorReadValue(true);
+
+    while (ph > 8 || ph < 6)
+    {
+      if (ph > 8)
+      {
+        warinig("PH > 8, dialysis is not possible");
+      }
+      else if (ph < 6)
+      {
+        warinig("PH < 6, dialysis is not possible");
+      }
+
+      /// PH MEASUREMENT
+      ph = ColorReadValue(true);
+    }
+
+    status("PH is ok");
+    status("NOW YOU CAN DIALYSE, process is started");
+    delay(1000);
+
+    isOn = true;
+
+    digitalWrite(pump, HIGH);
+  }
+
   /// CONTAINER LEVEL MEASUREMENT
-  distance = calcDistance();
-  conatinerLevelpre = (containerHeight - distance) / (containerHeight - 2) * 100;
-  Serial.print("Conatiner Level: ");
-  Serial.println((containerHeight - distance));
-  Serial.print("Conatiner Level %: ");
-  Serial.print(conatinerLevelpre);
-  Serial.println(" %");
+  conatinerLevel = calcDistance();
 
-  /// PH MEASUREMENT
-  ph = ColorReadValue(true);
-  Serial.print("PH: ");
-  Serial.println(ph);
+  while (conatinerLevel < 15)
+  {
+    warinig("Dialysis Fluid Container needs to be refilled");
 
-  /// TEMP MEASUREMENT
-  temp = getTemp();
-  Serial.print("Temp: ");
-  Serial.println(temp);
+    /// Stop Pump
+    digitalWrite(pump, LOW);
+
+    /// Rechecking conditions before pump restart
+    isOn = false;
+
+    /// CONTAINER LEVEL MEASUREMENT
+    conatinerLevel = calcDistance();
+  }
+
+  status("Good, Dialysis Fluid Container is refilled Successfully");
 
   /// BLOOD LEAKAGE TEST
   DialysisColor = ColorReadValue(false);
-  Serial.print("Dialysat Color: ");
-  Serial.println(DialysisColor);
+  while (DialysisColor < 550 || DialysisColor > 700)
+  {
+    warinig("There is a Blood Leakage, Check the dialysis fluid");
 
+    /// Stop Pump
+    digitalWrite(pump, LOW);
+
+    /// Rechecking conditions before pump restart
+    isOn = false;
+
+    /// CONTAINER LEVEL MEASUREMENT
+    conatinerLevel = calcDistance();
+  }
+  status("Good, Dialysis Fluid is now pure");
   /// DRAIN CONTAINER LEVEL MEASUREMENT
   drainLevel = drainLevelCalc();
-  Serial.print("Drain Level: ");
-  Serial.println(drainLevel);
+  while (drainLevel < 15)
+  {
+    warinig("Drain if full, please empty it");
 
-  delay(2000);
+    /// Stop Pump
+    digitalWrite(pump, LOW);
+
+    /// Rechecking conditions before pump restart
+    isOn = false;
+
+    /// CONTAINER LEVEL MEASUREMENT
+    conatinerLevel = calcDistance();
+  }
+  status("Good, Drain Container is now empty");
+
+  delay(1000);
 }
 /// End of void Loop ///
 
@@ -186,7 +271,7 @@ int ColorReadValue(bool isPh)
     pH_g = 0.000000007332 * greenFR * greenFR * greenFR - 0.00001259 * greenFR * greenFR + 0.01022 * greenFR + 4.676; // greenPW
     pH_b = 0.000000005716 * blueFR * blueFR * blueFR - 0.00001896 * blueFR * blueFR + 0.02183 * blueFR - 1.428;       // bluePW
 
-    value = ((pH_r + pH_g + pH_b) * 10 / 3) + 15;
+    value = ((pH_r + pH_g + pH_b) * 10 / 3) + 17;
   }
   else
   {
@@ -233,7 +318,7 @@ float calcDistance()
   duration = pulseIn(echo, HIGH);
 
   dis = (duration / 2) * 0.0343;
-  return dis;
+  return (containerHeight - dis) / (containerHeight - 3.5) * 100;
 }
 
 /////////////////////////// DRAIN CONTAINER LEVEL MEASUREMENT ///////////////////////////
@@ -243,7 +328,21 @@ int drainLevelCalc()
   return value;
 }
 
-void warinig(String mgs)
+void warinig(String msg)
 {
+  Serial.print("Warning: ");
   Serial.println(msg);
+  Serial.print(" !!!");
 }
+
+void status(String msg)
+{
+  Serial.print("Status: ");
+  Serial.println(msg);
+  Serial.print(" ...");
+}
+
+/// Container: 3.5 cm ///
+/// Dialyste Normal 550-700
+/// PH Normal 7 [6-8]
+/// Drain Level Normal:
