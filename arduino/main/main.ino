@@ -130,7 +130,7 @@ void loop()
   /// CONTAINER LEVEL MEASUREMENT
   conatinerLevel = calcDistance();
 
-  while (conatinerLevel > 95)
+  while (conatinerLevel < 15)
   {
     warinig("Dialysis Fluid Container needs to be refilled");
 
@@ -332,6 +332,7 @@ void warinig(String msg)
   Serial.print("Warning: ");
   Serial.println(msg);
   Serial.print(" !!!");
+  delay(500);
 }
 
 void status(String msg)
@@ -339,6 +340,7 @@ void status(String msg)
   Serial.print("Status: ");
   Serial.println(msg);
   Serial.print(" ...");
+  delay(500);
 }
 
 /// Container: 3.5 cm ///
