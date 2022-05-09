@@ -88,9 +88,9 @@ void loop()
     status("Dialysis Fluid Container is full");
     /// TEMP MEASUREMENT
     temp = getTemp();
-    while (temp < 42)
+    while (temp < 38)
     {
-      warinig("Temp < 42, heater is working now");
+      warinig("Temp < 38, heater is working now");
       digitalWrite(heater, LOW);
 
       /// TEMP MEASUREMENT
