@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:control_app/widgets/strip_widget.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -10,6 +12,10 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      debugPrint("Hello Web");
+    }
+
     return Scaffold(
       appBar: AppBar(
           title: const Text("Smart Hemodialysis"),
@@ -27,13 +33,11 @@ class _HomeState extends State<Home> {
           Expanded(
               child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/akwa.png',
-                height: MediaQuery.of(context).size.height / 2,
+            children: const [
+              Strip(
+                icon: Icon(Icons.thermostat),
+                txt: 'Temperature',
               ),
-              const SizedBox(height: 20),
-              const Center(child: Text("AKWA MIX EVERY WHERE")),
             ],
           )),
         ],

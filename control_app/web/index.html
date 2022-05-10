@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -27,11 +28,12 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>control_app</title>
   <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
   <!-- This script installs service_worker.js to provide PWA functionality to
        application. For more information, see:
@@ -100,5 +102,30 @@
       loadMainDartJs();
     }
   </script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-analytics.js"></script>
+
+
+
+  <script>
+    //Replace with your config data
+    var firebaseConfig = {
+      apiKey: "AIzaSyDnFl4dQc3xiVgdsocmfjpscyBQTvofj9A",
+      authDomain: "akwa-dialysis.firebaseapp.com",
+      databaseURL: "https://akwa-dialysis-default-rtdb.firebaseio.com",
+      projectId: "akwa-dialysis",
+      storageBucket: "akwa-dialysis.appspot.com",
+      messagingSenderId: "739075153701",
+      appId: "1:739075153701:web:53fe0bceea9390b6ed04cc",
+      measurementId: "G-8NVLKN5VG2"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+  </script>
 </body>
+
 </html>

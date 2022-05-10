@@ -1,4 +1,4 @@
-import 'package:control_app/login.dart';
+import 'package:control_app/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overboard/flutter_overboard.dart';
 
@@ -42,11 +42,11 @@ class OnBoarding extends StatelessWidget {
         finishText: 'Get Started',
         skipCallback: () {
           Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const Login()));
+              MaterialPageRoute(builder: (context) => const Home()));
         },
         finishCallback: () {
           Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const Login()));
+              MaterialPageRoute(builder: (context) => const Home()));
         },
       ),
     );
