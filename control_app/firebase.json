@@ -1,16 +1,11 @@
 {
   "hosting": {
-    "public": "y",
+    "site": "smart-predialyzer",
+    "public": "build/web",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
     ]
   }
 }
