@@ -1,6 +1,9 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include <math.h>
+
 // Define Thermistor pin
-#define thermistor_output A1
+#define ONE_WIRE_BUS 10
 
 // Define Water Level Sensor pin
 #define drainPin A0
@@ -30,11 +33,18 @@
 
 int ph = 0;
 int DialysisColor = 0;
+int drainLevel = 0;
+
 double temp = 0;
 
 float containerHeight = 11;
 float conatinerLevel = 0;
-int drainLevel = 0;
+
+// for DallasTemperature
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+float Celcius=0;
+float Fahrenheit=0;
 
 void setup()
 {
@@ -66,6 +76,9 @@ void setup()
 
   // Setup Serial Monitor
   Serial.begin(9600);
+
+  // DallasTemperature begin
+  sensors.begin();  
 }
 
 bool isOn = false;
@@ -79,7 +92,8 @@ void loop()
     conatinerLevel = calcDistance();
     while (conatinerLevel <= 100)
     {
-      warinig("Dialysis Fluid Container isn't full, please add dialysis fluid");
+    
+      warning("Dialysis Fluid Container isn't full, please add dialysis fluid");
 
       /// CONTAINER LEVEL MEASUREMENT
       conatinerLevel = calcDistance();
@@ -90,11 +104,13 @@ void loop()
     temp = getTemp();
     while (temp < 38)
     {
-      warinig("Temp < 38, heater is working now");
+      warning("Temp < 38, heater is working now");
       digitalWrite(heater, LOW);
 
       /// TEMP MEASUREMENT
       temp = getTemp();
+      Serial.print("temp =");
+      Serial.println(temp);
     }
     digitalWrite(heater, HIGH);
 
@@ -107,11 +123,11 @@ void loop()
     {
       if (ph > 8)
       {
-        warinig("PH > 8, dialysis is not possible");
+        warning("PH > 8, dialysis is not possible");
       }
       else if (ph < 6)
       {
-        warinig("PH < 6, dialysis is not possible");
+        warning("PH < 6, dialysis is not possible");
       }
 
       /// PH MEASUREMENT
@@ -132,7 +148,10 @@ void loop()
 
   while (conatinerLevel < 15)
   {
-    warinig("Dialysis Fluid Container needs to be refilled");
+    /// CONTAINER LEVEL MEASUREMENT
+    conatinerLevel = calcDistance();
+    
+    warning("Dialysis Fluid Container needs to be refilled");
 
     /// Stop Pump
     digitalWrite(pump, LOW);
@@ -140,33 +159,32 @@ void loop()
     /// Rechecking conditions before pump restart
     isOn = false;
 
-    /// CONTAINER LEVEL MEASUREMENT
-    conatinerLevel = calcDistance();
   }
 
   status("Good, Dialysis Fluid Container is refilled Successfully");
 
-  /// BLOOD LEAKAGE TEST
-  DialysisColor = ColorReadValue(false);
-  while (DialysisColor > 700)
-  {
-    warinig("There is a Blood Leakage, Check the dialysis fluid");
-
-    /// Stop Pump
-    digitalWrite(pump, LOW);
-
-    /// Rechecking conditions before pump restart
-    isOn = false;
-
-    /// CONTAINER LEVEL MEASUREMENT
-    conatinerLevel = calcDistance();
-  }
-  status("Good, Dialysis Fluid is now pure");
+//  /// BLOOD LEAKAGE TEST
+//  DialysisColor = ColorReadValue(false);
+//  while (DialysisColor > 700)
+//  {
+//    warning("There is a Blood Leakage, Check the dialysis fluid");
+//    Serial.print("DialysisColor: ");
+//  Serial.println(DialysisColor);
+//    /// Stop Pump
+//    digitalWrite(pump, LOW);
+//
+//    /// Rechecking conditions before pump restart
+//    isOn = false;
+//
+//    /// CONTAINER LEVEL MEASUREMENT
+//    conatinerLevel = calcDistance();
+//  }
+//  status("Good, Dialysis Fluid is now pure");
   /// DRAIN CONTAINER LEVEL MEASUREMENT
   drainLevel = drainLevelCalc();
   while (drainLevel > 95)
   {
-    warinig("Drain if full, please empty it");
+    warning("Drain if full, please empty it");
 
     /// Stop Pump
     digitalWrite(pump, LOW);
@@ -271,10 +289,14 @@ int ColorReadValue(bool isPh)
     pH_b = 0.000000005716 * blueFR * blueFR * blueFR - 0.00001896 * blueFR * blueFR + 0.02183 * blueFR - 1.428;       // bluePW
 
     value = ((pH_r + pH_g + pH_b) * 10 / 3) + 17;
+    Serial.print("PH = ");
+    Serial.print(value); 
   }
   else
   {
     value = (100 * redFR + 10 * greenFR + blueFR) / 10;
+        Serial.print("PH = ");
+    Serial.print(value);
   }
   // Print output to Serial Monitor
   //  Serial.print("Red FR = ");
@@ -291,17 +313,9 @@ int ColorReadValue(bool isPh)
 /////////////////////////// Temp Measuerment ///////////////////////////
 double getTemp()
 {
-  int thermistor_adc_val;
-  double output_voltage, thermistor_resistance, therm_res_ln, temperature;
-  thermistor_adc_val = analogRead(thermistor_output);
-  output_voltage = ((thermistor_adc_val * 5.0) / 1023.0);
-  thermistor_resistance = ((5 * (10.0 / output_voltage)) - 10); /* Resistance in kilo ohms */
-  thermistor_resistance = thermistor_resistance * 1000;         /* Resistance in ohms   */
-  therm_res_ln = log(thermistor_resistance);
-  temperature = (1 / (0.001129148 + (0.000234125 * therm_res_ln) + (0.0000000876741 * therm_res_ln * therm_res_ln * therm_res_ln))); /* Temperature in Kelvin */
-  temperature = temperature - 273.15;                                                                                                /* Temperature in degree Celsius */
-
-  return temperature;
+  sensors.requestTemperatures(); 
+  Celcius=sensors.getTempCByIndex(0);
+  return Celcius;
 }
 
 /////////////////////////// CONTAINER LEVEL MEASUREMENT ///////////////////////////
@@ -323,11 +337,18 @@ float calcDistance()
 /////////////////////////// DRAIN CONTAINER LEVEL MEASUREMENT ///////////////////////////
 int drainLevelCalc()
 {
+  
   int value = analogRead(drainPin);
-  return value;
+  int percentage = (value/10)+35;
+  if(percentage>50){
+    return percentage; 
+  }
+  else{
+  return 0;
+  }
 }
 
-void warinig(String msg)
+void warning(String msg)
 {
   Serial.print("Warning: ");
   Serial.println(msg);
