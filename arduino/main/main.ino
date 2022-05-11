@@ -92,7 +92,10 @@ void loop()
     conatinerLevel = calcDistance();
     while (conatinerLevel <= 100)
     {
+<<<<<<< HEAD
     
+=======
+>>>>>>> 84b334679c37542f062a94012c7f9ea9c29f7503
       warning("Dialysis Fluid Container isn't full, please add dialysis fluid");
 
       /// CONTAINER LEVEL MEASUREMENT
@@ -148,9 +151,12 @@ void loop()
 
   while (conatinerLevel < 15)
   {
+<<<<<<< HEAD
     /// CONTAINER LEVEL MEASUREMENT
     conatinerLevel = calcDistance();
     
+=======
+>>>>>>> 84b334679c37542f062a94012c7f9ea9c29f7503
     warning("Dialysis Fluid Container needs to be refilled");
 
     /// Stop Pump
@@ -163,6 +169,7 @@ void loop()
 
   status("Good, Dialysis Fluid Container is refilled Successfully");
 
+<<<<<<< HEAD
 //  /// BLOOD LEAKAGE TEST
 //  DialysisColor = ColorReadValue(false);
 //  while (DialysisColor > 700)
@@ -180,6 +187,24 @@ void loop()
 //    conatinerLevel = calcDistance();
 //  }
 //  status("Good, Dialysis Fluid is now pure");
+=======
+  /// BLOOD LEAKAGE TEST
+  DialysisColor = ColorReadValue(false);
+  while (DialysisColor > 700)
+  {
+    warning("There is a Blood Leakage, Check the dialysis fluid");
+
+    /// Stop Pump
+    digitalWrite(pump, LOW);
+
+    /// Rechecking conditions before pump restart
+    isOn = false;
+
+    /// CONTAINER LEVEL MEASUREMENT
+    conatinerLevel = calcDistance();
+  }
+  status("Good, Dialysis Fluid is now pure");
+>>>>>>> 84b334679c37542f062a94012c7f9ea9c29f7503
   /// DRAIN CONTAINER LEVEL MEASUREMENT
   drainLevel = drainLevelCalc();
   while (drainLevel > 95)
