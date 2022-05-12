@@ -15,7 +15,16 @@ class _HomeState extends State<Home> {
     if (kIsWeb) {
       debugPrint("Hello Web");
     }
-
+    double widths = 0;
+    double heights = 0;
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      widths = MediaQuery.of(context).size.width;
+      heights = MediaQuery.of(context).size.height;
+    } else if (kIsWeb ||
+        MediaQuery.of(context).orientation == Orientation.landscape) {
+      widths = MediaQuery.of(context).size.height;
+      heights = MediaQuery.of(context).size.width;
+    }
     return Scaffold(
       appBar: AppBar(
           title: const Text("Smart Hemodialysis"),
@@ -31,14 +40,32 @@ class _HomeState extends State<Home> {
             height: 20,
           ),
           Expanded(
-              child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Strip(
-                icon: Icon(Icons.thermostat),
-                txt: 'Temperature',
-              ),
-            ],
+              child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: ListView(
+              children: const [
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child:
+                      Strip(icon: Icon(Icons.thermostat), txt: 'Temperature'),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child:
+                      Strip(icon: Icon(Icons.thermostat), txt: 'Temperature'),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child:
+                      Strip(icon: Icon(Icons.thermostat), txt: 'Temperature'),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child:
+                      Strip(icon: Icon(Icons.thermostat), txt: 'Temperature'),
+                ),
+              ],
+            ),
           )),
         ],
       ),
