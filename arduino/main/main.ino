@@ -6,7 +6,16 @@
 #define ONE_WIRE_BUS 10
 
 // Define Thermistor pin
-#define thermistor_output A1
+#define levelLED A1
+
+// Define Thermistor pin
+#define PHLED A2
+
+// Define Thermistor pin
+#define drainLED A3
+
+// Define Thermistor pin
+#define leackageLED A4
 
 // Define Water Level Sensor pin
 #define drainPin A0
@@ -33,14 +42,16 @@
 #define sensorOutBD 9
 
 // Variables for Color Pulse Width Measurements
-
 int ph = 0;
 int DialysisColor = 0;
-double temp = 0;
+int temp = 0;
 
 float containerHeight = 11;
-float conatinerLevel = 0;
+int conatinerLevel = 0;
 int drainLevel = 0;
+String x = "*";
+bool isOn = false;
+int status = 0;
 
 // for DallasTemperature
 OneWire oneWire(ONE_WIRE_BUS);
@@ -55,6 +66,15 @@ void setup()
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
+  pinMode(levelLED, OUTPUT);
+  pinMode(PHLED, OUTPUT);
+  pinMode(drainLED, OUTPUT);
+  pinMode(leackageLED, OUTPUT);
+
+  digitalWrite(levelLED, LOW);
+  digitalWrite(PHLED, LOW);
+  digitalWrite(drainLED, LOW);
+  digitalWrite(leackageLED, LOW);
 
   // Set Pulse Width scaling to 20%
   digitalWrite(S0, HIGH);
@@ -82,68 +102,76 @@ void setup()
   sensors.begin();
 }
 
-bool isOn = false;
-
 void loop()
 {
-
   if (!isOn)
   {
     /// CONTAINER LEVEL MEASUREMENT
     conatinerLevel = calcDistance();
-
+    drainLevel = drainLevelCalc();
+    temp = getTemp();
     while (conatinerLevel <= 100)
     {
-      warinig("Dialysis Fluid Container isn't full, please add dialysis fluid");
-      Serial.println(conatinerLevel);
+
       /// CONTAINER LEVEL MEASUREMENT
       conatinerLevel = calcDistance();
+      digitalWrite(levelLED, HIGH);
+      status = 3;
+      String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+      Serial.print(z);
       delay(500);
     }
-
-    status("Dialysis Fluid Container is full: ");
-    Serial.println(conatinerLevel);
+    digitalWrite(levelLED, LOW);
 
     /// TEMP MEASUREMENT
     temp = getTemp();
     while (temp < 38)
     {
-      warinig("Temp < 38, heater is working now: ");
-      Serial.println(temp);
+
       digitalWrite(heater, LOW);
 
       /// TEMP MEASUREMENT
       temp = getTemp();
+      status = 1;
+      String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+      Serial.print(z);
       delay(500);
     }
     digitalWrite(heater, HIGH);
-
-    status("Temperature is ok: ");
-    Serial.println(temp);
 
     /// PH MEASUREMENT
     ph = ColorReadValue(true);
 
     while (ph > 8 || ph < 6)
     {
+
       if (ph > 8)
       {
-        warinig("PH > 8, dialysis is not possible: ");
+        //        warinig("PH > 8, dialysis is not possible: ");
+        digitalWrite(PHLED, HIGH);
       }
       else if (ph < 6)
       {
-        warinig("PH < 6, dialysis is not possible: ");
+        //        warinig("PH < 6, dialysis is not possible: ");
+        digitalWrite(PHLED, HIGH);
       }
-      Serial.println(ph);
+      //      Serial.println(ph);
       /// PH MEASUREMENT
       ph = ColorReadValue(true);
+      status = 5;
+      String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+      Serial.print(z);
       delay(500);
     }
 
-    status("PH is ok: ");
-    Serial.println(ph);
+    // status("PH is ok: ");
+    digitalWrite(PHLED, LOW);
+    // Serial.println(ph);
 
-    status("NOW YOU CAN DIALYSE, process is started");
+    // status("NOW YOU CAN DIALYSE, process is started");
+    status = 0;
+    String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+    Serial.print(z);
     delay(1000);
 
     isOn = true;
@@ -153,11 +181,38 @@ void loop()
 
   /// CONTAINER LEVEL MEASUREMENT
   conatinerLevel = calcDistance();
-if(conatinerLevel < 30){
-  while (conatinerLevel <= 100)
+  if (conatinerLevel < 30)
   {
-    warinig("Dialysis Fluid Container needs to be refilled: ");
-    Serial.println(conatinerLevel);
+    while (conatinerLevel <= 100)
+    {
+
+      digitalWrite(levelLED, HIGH);
+      /// Stop Pump
+      digitalWrite(pump, LOW);
+
+      /// Rechecking conditions before pump restart
+      isOn = false;
+
+      /// CONTAINER LEVEL MEASUREMENT
+      conatinerLevel = calcDistance();
+      status = 3;
+      String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+      Serial.print(z);
+    }
+  }
+
+  status = 0;
+  String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+  Serial.print(z);
+
+  // status("Good, Dialysis Fluid Container Level is ok: ");
+  digitalWrite(levelLED, LOW);
+  // Serial.println(conatinerLevel);
+  //
+  /// BLOOD LEAKAGE TEST
+  DialysisColor = ColorReadValue(false);
+  while (DialysisColor > 700)
+  {
 
     /// Stop Pump
     digitalWrite(pump, LOW);
@@ -166,59 +221,55 @@ if(conatinerLevel < 30){
     isOn = false;
 
     /// CONTAINER LEVEL MEASUREMENT
-    conatinerLevel = calcDistance();
+    DialysisColor = ColorReadValue(false);
+    status = 2;
+    String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+    Serial.print(z);
   }
-}
-
-  status("Good, Dialysis Fluid Container Level is ok: ");
-  Serial.println(conatinerLevel);
-  //
-  //  /// BLOOD LEAKAGE TEST
-  //  DialysisColor = ColorReadValue(false);
-  //  while (DialysisColor > 700)
-  //  {
-  //    warinig("There is a Blood Leakage, Check the dialysis fluid: ");
-  //    Serial.println(DialysisColor);
-  //
-  //    /// Stop Pump
-  //    digitalWrite(pump, LOW);
-  //
-  //    /// Rechecking conditions before pump restart
-  //    isOn = false;
-  //
-  //    /// CONTAINER LEVEL MEASUREMENT
-  //    DialysisColor = ColorReadValue(false);
-  //  }
-  //  status("Good, Dialysis Fluid is pure: ");
+  //    status("Good, Dialysis Fluid is pure: ");
+  //  Serial.print("DialysisColor= ");
   //  Serial.println(DialysisColor);
 
   /// DRAIN CONTAINER LEVEL MEASUREMENT
   drainLevel = drainLevelCalc();
+  status = 0;
+  z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+  Serial.print(z);
+
   if (drainLevel > 100)
   {
     while (drainLevel > 10)
     {
-      warinig("Drain if full, please empty it: ");
-      Serial.println(drainLevel);
+
+      digitalWrite(drainLED, HIGH);
 
       /// Stop Pump
       digitalWrite(pump, LOW);
 
       /// Rechecking conditions before pump restart
-//      isOn = false;
+      //      isOn = false;
 
       /// DRAIN CONTAINER LEVEL MEASUREMENT
       drainLevel = drainLevelCalc();
+      status = 4;
+      String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+      Serial.print(z);
     }
-    if(drainLevel < 10){
+    if (drainLevel < 10)
+    {
       digitalWrite(pump, HIGH);
-     }
+      status = 0;
+      String z = "@" + String(conatinerLevel) + x + String(drainLevel) + x + String(temp) + x + String(status) + "@";
+      Serial.print(z);
+    }
   }
 
-  status("Good, Drain Container is not full");
-  Serial.println(drainLevel);
+  // status("Good, Drain Container is not full");
+  digitalWrite(drainLED, LOW);
+  // Serial.print("drainLevel= ");
+  // Serial.println(drainLevel);
 
-  Serial.print("End of LOOP");
+  // Serial.print("End of LOOP");
   delay(1000);
 }
 /// End of void Loop ///
@@ -289,17 +340,17 @@ int ColorReadValue(bool isPh)
   // Read Red Frequency
   redFR = getRedFR(pin);
   // Delay to stabilize sensor
-  delay(100);
+  delay(10);
 
   // Read Green Frequency
   greenFR = getGreenFR(pin);
   // Delay to stabilize sensor
-  delay(100);
+  delay(10);
 
   // Read Blue Frequency
   blueFR = getBlueFR(pin);
   // Delay to stabilize sensor
-  delay(100);
+  delay(10);
 
   if (isPh)
   {
@@ -315,6 +366,12 @@ int ColorReadValue(bool isPh)
   else
   {
     value = (100 * redFR + 10 * greenFR + blueFR) / 10;
+    Serial.print("RED =");
+    Serial.println(redFR);
+    //    Serial.print("GREEN =");
+    //    Serial.println(greenFR);
+    //    Serial.print("BLUE =");
+    //    Serial.println(blueFR);
   }
 
   return value;
@@ -351,7 +408,7 @@ int drainLevelCalc()
   int percentage = (value / 10) + 35;
   if (percentage > 50)
   {
-    return percentage;
+    return percentage * 1.15;
   }
   else
   {
@@ -359,21 +416,21 @@ int drainLevelCalc()
   }
 }
 
-void warinig(String msg)
-{
-  Serial.print("Warning: ");
-  Serial.println(msg);
-  Serial.print(" !!!");
-  delay(500);
-}
-
-void status(String msg)
-{
-  Serial.print("Status: ");
-  Serial.println(msg);
-  Serial.print(" ...");
-  delay(500);
-}
+// void warinig(String msg)
+//{
+//   Serial.print("Warning: ");
+//   Serial.println(msg);
+//   Serial.print(" !!!");
+//   delay(500);
+// }
+//
+// void status(String msg)
+//{
+//   Serial.print("Status: ");
+//   Serial.println(msg);
+//   Serial.print(" ...");
+//   delay(500);
+// }
 
 /// Container: 3.5 cm ///
 /// Dialyste Normal 550-700

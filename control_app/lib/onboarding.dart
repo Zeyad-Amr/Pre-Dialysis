@@ -1,4 +1,5 @@
 import 'package:control_app/home.dart';
+import 'package:control_app/services/service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overboard/flutter_overboard.dart';
 
@@ -8,7 +9,7 @@ class OnBoarding extends StatelessWidget {
     PageModel(
         color: Colors.white,
         imageAssetPath: 'assets/01.png',
-        title: 'Helping Pateints',
+        title: 'Helping Patients',
         titleColor: Colors.grey[900],
         bodyColor: Colors.grey[900],
         body:
@@ -42,11 +43,11 @@ class OnBoarding extends StatelessWidget {
         finishText: 'Get Started',
         skipCallback: () {
           Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const Home()));
+              MaterialPageRoute(builder: (context) => const Services()));
         },
         finishCallback: () {
           Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const Home()));
+              MaterialPageRoute(builder: (context) => const Services()));
         },
       ),
     );
