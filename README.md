@@ -1,4 +1,4 @@
-# Pre-Dialysis
+# Smart-Pre-Dialyzer
 ## Description
 “Smart Pre-Dialyzer” is a monitored dialysate circuit using mobile application and Web Site.  
 “Smart Pre-Dialyzer” simulates Dialysate Circuit and its Alarm and Monitoring systems.
